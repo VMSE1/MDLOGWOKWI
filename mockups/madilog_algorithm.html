@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MADILOG — как работает идентификация</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef3f6;--fg:#0f2233;--pn:#fff;--mut:#58697a;--bd:#cfdae3;--ac:#0a6fb8;--ok:#14803c;--wn:#b45309;--bad:#b91c1c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08121b;--fg:#e4eef6;--pn:#102232;--mut:#8da3b6;--bd:#243d54;--ac:#5db0f5;--ok:#4ade80;--wn:#fbbf24;--bad:#f87171}}
+:root[data-theme="dark"]{--bg:#08121b;--fg:#e4eef6;--pn:#102232;--mut:#8da3b6;--bd:#243d54;--ac:#5db0f5;--ok:#4ade80;--wn:#fbbf24;--bad:#f87171}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;padding:16px;max-width:1000px;margin:0 auto}
+h1{font-size:22px;margin:0 0 2px}
+.sub{color:var(--mut);margin:0 0 12px}
+svg{width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--bd)}
+svg text{font-family:inherit}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--pn);color:var(--fg);cursor:pointer}
+button.main{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+label{color:var(--mut);display:flex;gap:6px;align-items:center}
+.say{background:var(--pn);border-left:4px solid var(--ac);padding:10px 14px;border-radius:0 8px 8px 0;min-height:68px}
+.say b{display:block;margin-bottom:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.pn{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:10px 14px}
+.pn h2{font-size:14px;margin:0 0 6px}
+ol{margin:0;padding-left:20px}
+ol li{color:var(--mut);padding:1px 0}
+ol li.on{color:var(--fg);font-weight:600}
+ol li.done{color:var(--fg)}
+pre{margin:0;font:12.5px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;min-height:120px;max-height:190px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{text-align:left;padding:3px 6px;border-bottom:1px solid var(--bd)}
+tr.hit td{background:rgba(20,128,60,.18)}
+tr.miss td{background:rgba(185,28,28,.15)}
+#res{font-weight:600;margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid var(--bd);color:var(--mut)}
+#res.ok{color:var(--ok);border-color:var(--ok)}#res.wn{color:var(--wn);border-color:var(--wn)}#res.bad{color:var(--bad);border-color:var(--bad)}
+.note{color:var(--mut);font-size:12.5px;margin-top:10px}
+</style></head><body>
+<h1>Как работает идентификация MADILOG</h1>
+<p class="sub">Иллюстрация логики алгоритма прототипа. Это не измерения: числа дальностей — целевые.</p>
+
+<svg id="sc" viewBox="0 0 800 400" role="img" aria-label="Схема: буй, подводный аппарат, берег с сервером">
+<defs><clipPath id="wc"><rect x="0" y="150" width="800" height="250"/></clipPath>
+<linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f4c75"/><stop offset="1" stop-color="#06182a"/></linearGradient></defs>
+<rect width="800" height="150" fill="#9fc7e0"/>
+<rect y="150" width="800" height="250" fill="url(#wg)"/>
+<path d="M0 372 Q160 350 300 366 T560 360 T800 350 V400 H0Z" fill="#1c2f3a"/>
+<path d="M0 150 H800" stroke="#cfe9f7" stroke-width="2"/>
+<path d="M660 150 L690 118 H800 V150Z" fill="#41505c"/>
+<rect x="715" y="86" width="52" height="32" fill="#e8eef2" stroke="#50606c"/>
+<path d="M741 86 V66 M732 66 H750" stroke="#50606c" stroke-width="2"/>
+<text x="741" y="107" font-size="10" text-anchor="middle" fill="#1a2a36">сервер</text>
+<g id="relay" opacity="0"><path d="M430 150 V132" stroke="#333" stroke-width="2"/><polygon points="416,150 420,138 440,138 444,150" fill="#f2b705" stroke="#7a5a00"/><polygon points="416,150 444,150 430,166" fill="#d99d00"/><text x="430" y="126" font-size="11" text-anchor="middle" fill="#123">буй-ретранслятор</text></g>
+<g id="buoy" opacity="1"><path d="M170 150 V122" stroke="#333" stroke-width="2"/><polygon points="156,150 160,136 180,136 184,150" fill="#f2b705" stroke="#7a5a00"/><rect x="162" y="132" width="16" height="5" fill="#1e3a8a"/><polygon points="156,150 184,150 170,166" fill="#d99d00"/><text x="170" y="114" font-size="11" text-anchor="middle" fill="#123">плавучая станция</text></g>
+<g id="under" clip-path="url(#wc)"></g>
+<g id="drone" transform="translate(540 318)"><ellipse rx="34" ry="12" fill="#f2b705" stroke="#7a5a00"/><rect x="-6" y="-17" width="12" height="6" fill="#7a5a00"/><circle id="led" cx="26" cy="0" r="3.5" fill="#889"/><text id="did" y="30" font-size="12" text-anchor="middle" fill="#fff">ID: ?</text><text y="46" font-size="10" text-anchor="middle" fill="#9fc4de">БПА + модуль-идентификатор</text></g>
+<g id="ship" opacity="0" transform="translate(170 150)"><path d="M-62 -2 H62 L46 17 H-46Z" fill="#c2410c" stroke="#7c2d12"/><rect x="-26" y="-22" width="36" height="20" fill="#e5e7eb" stroke="#475569"/><rect x="-16" y="-34" width="14" height="12" fill="#e5e7eb" stroke="#475569"/><path d="M26 -2 V-28" stroke="#333" stroke-width="2"/><rect x="-9" y="17" width="18" height="7" rx="2" fill="#f2b705" stroke="#7a5a00"/><text y="-44" font-size="11" text-anchor="middle" fill="#123">плавучая станция (корабль)</text><text y="44" font-size="10" text-anchor="middle" fill="#9fc4de">модуль станции закреплён на корпусе</text></g>
+<g id="over"></g><g id="tags"></g>
+<text x="14" y="392" font-size="11" fill="#9fc4de">дно</text>
+</svg>
+
+<div class="bar">
+<button class="main" id="play">▶ Запустить</button>
+<button id="step">Шаг</button>
+<button id="reset">Сброс</button>
+<label>Плавучая станция
+<select id="obj"><option value="buoy">Буй</option><option value="ship">Корабль с модулем</option></select></label>
+<label>Сценарий
+<select id="scn"><option value="own">Свой: ID есть в реестре</option><option value="unk">Чужой: ID нет в реестре</option><option value="sil">Нет ответа аппарата</option></select></label>
+<label><input type="checkbox" id="mesh"> Mesh через второй буй (без LTE)</label>
+</div>
+
+<div class="say" id="say" aria-live="polite"><b>Нажмите «Запустить» или «Шаг»</b>Здесь будет подсказка, что говорить на каждом шаге.</div>
+
+<div class="grid">
+<div class="pn"><h2>Шаги алгоритма</h2><ol id="steps"></ol></div>
+<div class="pn"><h2>Журнал станции и сервера</h2><pre id="log"></pre></div>
+<div class="pn"><h2>Реестр аппаратов (демо-данные)</h2>
+<table><thead><tr><th>ID</th><th>Владелец</th><th>Миссия</th></tr></thead><tbody id="reg"></tbody></table></div>
+<div class="pn"><h2>Интерфейс оператора</h2><div id="res">Ожидание данных</div></div>
+</div>
+<p class="note" id="onote"></p>
+<p class="note">Частоты из концепции: 150 кГц — сканирование, 25 кГц — запрос, 30–40 кГц — ответ с ID. Данные реестра вымышлены.</p>
+
+<script>
+const NS="http://www.w3.org/2000/svg",$=id=>document.getElementById(id);
+let D=[540,318];const B=[170,150],R=[430,150],V=[741,102];
+const REG={"MD-0427":["НИЦ «Морские системы»","Инспекция кабеля, зона B"],"MD-0311":["Порт-оператор","Обследование дна"],"MD-0588":["Университет (пример)","Мониторинг воды"]};
+const STEPS=[
+["Сканирование · 150 кГц","Станция излучает высокочастотный сигнал и картирует дно. Объект обнаружен, но кто это — неизвестно. Это ровно та точка, где сегодня заканчиваются радар и сонар."],
+["Запрос ID · 25 кГц","Станция посылает акустический запрос. Модуль-идентификатор на аппарате слышит его и просыпается."],
+["Ответ с ID · 30–40 кГц","Аппарат отвечает своим идентификатором в отдельном диапазоне, чтобы ответ не смешался с запросом."],
+["Приём и проверка пакета","Станция декодирует пакет и проверяет контрольную сумму. Без корректного пакета ID не принимается."],
+["Передача на сервер","Данные уходят на берег по LTE или радио. Если связи нет, их несёт цепочка буёв (mesh)."],
+["Поиск в реестре","Сервер ищет ID в реестре: чей аппарат, какая миссия, разрешена ли работа в этой зоне."],
+["Результат оператору","Оператор получает понятный статус на карте. Отсутствие ответа никогда не считается подтверждением личности."]];
+$("steps").innerHTML=STEPS.map(s=>"<li>"+s[0]+"</li>").join("");
+$("reg").innerHTML=Object.entries(REG).map(([k,v])=>`<tr data-id="${k}"><td>${k}</td><td>${v[0]}</td><td>${v[1]}</td></tr>`).join("");
+let paused=false,run=0,idx=-1,busy=false;
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+function tween(ms,fn){const my=run;return new Promise(res=>{let el=0,last=performance.now();(function f(now){if(my!==run)return;const dt=now-last;last=now;if(!paused)el+=dt;const p=Math.min(el/ms,1);fn(p);p<1?requestAnimationFrame(f):res()})(last)})}
+const sleep=ms=>tween(ms,()=>{});
+function rings(layer,[x,y],col,max,n=3,ms=1500,gap=380){return Promise.all(Array.from({length:n},(_,i)=>sleep(i*gap).then(()=>{const c=mk("circle",{cx:x,cy:y,r:4,fill:"none",stroke:col,"stroke-width":2.5},layer);return tween(ms,p=>{c.setAttribute("r",4+p*max);c.setAttribute("opacity",1-p*.9)}).then(()=>c.remove())})))}
+function fly(a,b,col,label,ms=1400){const g=mk("g",{},$("over"));mk("circle",{r:6,fill:col},g);const t=mk("text",{y:-11,"font-size":11,"text-anchor":"middle",fill:"#12263a"},g);t.textContent=label;const bg=mk("text",{y:-11,"font-size":11,"text-anchor":"middle",fill:"none",stroke:"#fff","stroke-width":3},g);bg.textContent=label;g.insertBefore(bg,t);return tween(ms,p=>g.setAttribute("transform",`translate(${a[0]+(b[0]-a[0])*p} ${a[1]+(b[1]-a[1])*p})`)).then(()=>g.remove())}
+function tag(x,y,txt,col){const t=mk("text",{x,y,"font-size":12,"font-weight":600,"text-anchor":"middle",fill:col,stroke:"#06182a","stroke-width":3,"paint-order":"stroke"},$("tags"));t.textContent=txt}
+const lg=s=>{const l=$("log");l.textContent+=s+"\n";l.scrollTop=l.scrollHeight};
+const isShip=()=>$("obj").value==="ship",idEl=()=>$("did"),ledEl=()=>$("led");
+const sc=()=>$("scn").value,rid=()=>sc()==="unk"?"MD-9913":"MD-0427";
+function setStep(i){document.querySelectorAll("#steps li").forEach((li,k)=>li.className=k<i?"done":k===i?"on":"");$("say").innerHTML=`<b>${i+1}. ${STEPS[i][0]}</b>${STEPS[i][1]}`}
+function res(c,t){const r=$("res");r.className=c;r.textContent=t}
+const ACT=[
+async()=>{lg("[станция] излучаю 150 кГц, скан дна");await rings($("under"),B,"#ef4444",330,3);mk("rect",{x:D[0]-44,y:D[1]-22,width:88,height:44,fill:"none",stroke:"#ef4444","stroke-dasharray":"5 4","stroke-width":2},$("tags"));tag(D[0],D[1]-34,"объект обнаружен, ID неизвестен","#fca5a5");lg("[станция] найден движущийся объект, расстояние ~ 420 м")},
+async()=>{lg("[станция] запрос ID, 25 кГц");ledEl().setAttribute("fill","#facc15");await rings($("under"),B,"#facc15",420,3);lg("[аппарат] запрос принят")},
+async()=>{if(sc()==="sil"){tag(D[0],D[1]+38,"…тишина, тайм-аут 5 с","#fde68a");lg("[аппарат] ответа нет");await sleep(1200);return}
+idEl().textContent="ID: "+rid();ledEl().setAttribute("fill","#4ade80");lg("[аппарат] ответ 30–40 кГц, ID="+rid());await rings($("under"),D,"#4ade80",420,3)},
+async()=>{if(sc()==="sil"){lg("[станция] пакет не получен → статус NO_REPLY");await sleep(700);return}
+lg("[станция] декодирование, CRC16 ok");lg("[станция] пакет: ID="+rid()+", глубина 38 м, статус ok");await sleep(800)},
+async()=>{const mesh=$("mesh").checked,lab=sc()==="sil"?"NO_REPLY":rid();
+if(mesh){lg("[mesh] LTE недоступен, передача через ретранслятор");await fly(B,R,"#fff",lab,1100);await fly(R,V,"#fff",lab,1300)}else{lg("[станция] отправка по LTE/радио");await fly(B,V,"#fff",lab,2000)}
+lg("[сервер] получено: "+lab)},
+async()=>{document.querySelectorAll("#reg tr").forEach(r=>r.className="");
+if(sc()==="sil"){lg("[сервер] нет ID для поиска");await sleep(700);return}
+lg("[сервер] поиск "+rid()+" в реестре…");await sleep(900);
+const row=document.querySelector(`#reg tr[data-id="${rid()}"]`);
+if(row){row.className="hit";lg("[сервер] найден: "+REG[rid()][0])}else{lg("[сервер] ID не найден в реестре");mk("circle",{cx:0,cy:0,r:0},$("tags"))}},
+async()=>{if(sc()==="own"){res("ok","✔ СВОЙ · "+rid()+" · "+REG[rid()][1]+" · статус: разрешено");lg("[оператор] аппарат опознан")}
+else if(sc()==="unk"){res("bad","✖ ЧУЖОЙ · ID "+rid()+" не зарегистрирован · требуется реакция оператора");lg("[оператор] тревога: неизвестный аппарат")}
+else{res("wn","⚠ НЕ ПОДТВЕРЖДЕНО · аппарат не ответил · не считать «своим»");lg("[оператор] объект есть, личность не подтверждена")}
+await sleep(600)}];
+function clear(){run++;paused=false;busy=false;idx=-1;["under","over","tags"].forEach(i=>$(i).innerHTML="");$("log").textContent="";D=[540,318];$("drone").setAttribute("opacity",1);$("ship").setAttribute("opacity",isShip()?1:0);$("buoy").setAttribute("opacity",isShip()?0:1);$("did").textContent="ID: ?";$("led").setAttribute("fill","#889");$("onote").textContent=isShip()?"Станция на корабле: модуль закреплён на корпусе, питается от бортовой сети и работает так же, как на буе: сканирует, опрашивает аппарат и передаёт данные на сервер. Влияние шума двигателей нужно проверить на испытаниях.":"";document.querySelectorAll("#reg tr").forEach(r=>r.className="");res("","Ожидание данных");document.querySelectorAll("#steps li").forEach(l=>l.className="");$("say").innerHTML="<b>Нажмите «Запустить» или «Шаг»</b>Здесь будет подсказка, что говорить на каждом шаге.";$("play").textContent="▶ Запустить";$("relay").setAttribute("opacity",$("mesh").checked?1:0)}
+async function next(){if(busy||idx>=ACT.length-1)return false;busy=true;idx++;setStep(idx);const my=run;await ACT[idx]();if(my!==run)return false;busy=false;if(idx===ACT.length-1)document.querySelectorAll("#steps li").forEach(l=>l.className="done");return true}
+let auto=false;
+async function runAll(){auto=true;$("play").textContent="⏸ Пауза";const my=run;while(auto&&my===run&&idx<ACT.length-1){if(!await next())break;await sleep(600)}auto=false;if(my===run)$("play").textContent="↻ Ещё раз"}
+$("play").onclick=()=>{if($("play").textContent.startsWith("↻")){clear();runAll();return}
+if(auto||busy){paused=!paused;$("play").textContent=paused?"▶ Продолжить":"⏸ Пауза";return}
+runAll()};
+$("step").onclick=()=>{if(!auto)next()};
+$("reset").onclick=()=>{auto=false;clear()};
+$("scn").onchange=()=>{auto=false;clear()};
+$("obj").onchange=()=>{auto=false;clear()};
+$("mesh").onchange=()=>{auto=false;clear()};
+</script></body></html>

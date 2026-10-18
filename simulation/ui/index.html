@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MADILOG — интерфейс оператора</title>
+<style>
+:root{--bg:#0b1722;--pn:#112435;--bd:#23415a;--fg:#e6f0f8;--mut:#8aa3b8;--ok:#3ddc84;--bad:#ff5d5d;--wn:#ffc247;--in:#8aa3b8;--ac:#4aa8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif}
+header{display:flex;gap:16px;align-items:baseline;padding:10px 16px;border-bottom:1px solid var(--bd)}
+header h1{font-size:18px;margin:0}header span{color:var(--mut)}
+#conn{margin-left:auto;font-size:12px}
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr);gap:12px;padding:12px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.pn{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.pn h2{font-size:13px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+canvas{width:100%;height:520px;display:block;border-radius:6px;background:#0a1e2e}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{text-align:left;padding:4px 6px;border-bottom:1px solid var(--bd)}
+.st{font-weight:600}.own{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--wn)}.info{color:var(--in)}
+#log{max-height:200px;overflow:auto;font:12px/1.5 ui-monospace,Consolas,monospace}
+form{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+input,button{font:inherit;padding:6px 8px;border-radius:6px;border:1px solid var(--bd);background:#0b1b29;color:var(--fg)}
+button{background:var(--ac);color:#04121f;font-weight:600;border:0;cursor:pointer}
+.leg span{margin-right:12px;font-size:12px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+</style></head><body>
+<header><h1>MADILOG · оператор акватории</h1><span>демо-стенд: данные генерирует симулятор модулей</span><span id="conn">нет связи</span></header>
+<main>
+<section>
+ <div class="pn"><h2>Карта акватории (метры от условного начала)</h2><canvas id="map"></canvas>
+  <div class="leg"><span><i class="dot" style="background:#3ddc84"></i>свой</span><span><i class="dot" style="background:#ff5d5d"></i>чужой / подмена</span><span><i class="dot" style="background:#ffc247"></i>не подтверждено</span><span><i class="dot" style="background:#8aa3b8"></i>ожидание ответа</span><span>▲ станция (буй/корабль)</span></div></div>
+ <div class="pn"><h2>Журнал событий</h2><div id="log"></div></div>
+</section>
+<section>
+ <div class="pn"><h2>Объекты в акватории</h2><table><thead><tr><th>Объект</th><th>Статус</th><th>Владелец / миссия</th><th>Координаты</th></tr></thead><tbody id="trk"></tbody></table></div>
+ <div class="pn"><h2>Реестр аппаратов (БД)</h2><table><thead><tr><th>ID</th><th>Владелец</th><th>Миссия</th><th>Допуск</th></tr></thead><tbody id="reg"></tbody></table>
+  <form id="f"><input name="id" placeholder="ID, напр. MD-0777" required><input name="owner" placeholder="Владелец" required><input name="mission" placeholder="Миссия" required><label><input type="checkbox" name="allowed" checked> допуск разрешён</label><button>Добавить / обновить</button><button type="button" id="rst" style="background:#23415a;color:#e6f0f8">Сбросить треки</button></form></div>
+</section></main>
+<script>
+const COL={own:"#3ddc84",denied:"#ff5d5d",foreign:"#ff5d5d",spoof:"#ff5d5d",unconfirmed:"#ffc247",pending:"#8aa3b8"};
+const B={x0:-700,x1:700,y0:-600,y1:600};
+const cv=document.getElementById("map"),cx=cv.getContext("2d");let S=null;
+function fit(){const r=window.devicePixelRatio||1;cv.width=cv.clientWidth*r;cv.height=cv.clientHeight*r;cx.setTransform(r,0,0,r,0,0);draw()}
+const px=x=>(x-B.x0)/(B.x1-B.x0)*cv.clientWidth,py=y=>cv.clientHeight-(y-B.y0)/(B.y1-B.y0)*cv.clientHeight;
+function draw(){const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+ cx.strokeStyle="#16344a";cx.fillStyle="#4d6b82";cx.font="11px sans-serif";cx.lineWidth=1;
+ for(let x=-600;x<=600;x+=200){cx.beginPath();cx.moveTo(px(x),0);cx.lineTo(px(x),h);cx.stroke();cx.fillText(x+" м",px(x)+3,h-4)}
+ for(let y=-400;y<=400;y+=200){cx.beginPath();cx.moveTo(0,py(y));cx.lineTo(w,py(y));cx.stroke();cx.fillText(y+" м",3,py(y)-3)}
+ if(!S)return;
+ for(const m of S.modules){const x=px(m.x),y=py(m.y);cx.strokeStyle="#2a5878";cx.setLineDash([4,4]);cx.beginPath();cx.arc(x,y,150/(B.x1-B.x0)*w,0,7);cx.stroke();cx.setLineDash([]);
+  cx.fillStyle="#f2b705";cx.beginPath();cx.moveTo(x,y-9);cx.lineTo(x+8,y+7);cx.lineTo(x-8,y+7);cx.fill();cx.fillStyle="#cfe6f7";cx.font="12px sans-serif";cx.fillText(m.id,x+11,y+4)}
+ for(const t of S.tracks){const c=COL[t.status]||"#fff";cx.strokeStyle=c;cx.globalAlpha=.45;cx.beginPath();t.trail.forEach((p,i)=>i?cx.lineTo(px(p[0]),py(p[1])):cx.moveTo(px(p[0]),py(p[1])));cx.stroke();cx.globalAlpha=1;
+  const x=px(t.x),y=py(t.y);cx.fillStyle=c;cx.beginPath();cx.arc(x,y,7,0,7);cx.fill();
+  if(t.status==="spoof"||t.status==="foreign"||t.status==="denied"){cx.strokeStyle=c;cx.beginPath();cx.arc(x,y,13,0,7);cx.stroke()}
+  cx.fillStyle="#e6f0f8";cx.font="12px sans-serif";cx.fillText(t.label+" · "+t.status_text,x+12,y-8)}}
+const esc=s=>String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function cls(s){return s==="own"?"own":(s==="unconfirmed"?"warn":(s==="pending"?"info":"bad"))}
+function render(){if(!S)return;
+ trk.innerHTML=S.tracks.map(t=>`<tr><td>${esc(t.label)}</td><td class="st ${cls(t.status)}">${esc(t.status_text)}</td><td>${esc(t.owner||"—")}<br><small>${esc(t.mission||"")}</small></td><td>${t.lat}, ${t.lon}<br><small>метод: ${t.quality}</small></td></tr>`).join("")||'<tr><td colspan=4 style="color:var(--mut)">объектов нет</td></tr>';
+ reg.innerHTML=S.registry.map(r=>`<tr><td>${esc(r.id)}</td><td>${esc(r.owner)}</td><td>${esc(r.mission)}</td><td class="${r.allowed?"own":"bad"}">${r.allowed?"да":"нет"}</td></tr>`).join("");
+ log.innerHTML=S.events.slice().reverse().map(e=>`<div class="${e.level==="ok"?"own":e.level}">${e.t} ${esc(e.text)}</div>`).join("");draw()}
+async function tick(){try{S=await (await fetch("/api/v1/state")).json();conn.textContent="онлайн";conn.style.color="var(--ok)";render()}catch(e){conn.textContent="нет связи";conn.style.color="var(--bad)"}}
+f.onsubmit=async e=>{e.preventDefault();const d=new FormData(f);await fetch("/api/v1/registry",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:d.get("id").trim(),owner:d.get("owner"),mission:d.get("mission"),allowed:d.get("allowed")==="on"})});f.reset();f.allowed.checked=true;tick()};
+rst.onclick=async()=>{await fetch("/api/v1/reset",{method:"POST"});tick()};
+addEventListener("resize",fit);fit();tick();setInterval(tick,700);
+</script></body></html>

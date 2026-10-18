@@ -1,0 +1,6 @@
+[wokwi]
+version = 1
+elf = "build/madilog.elf"
+firmware = "build/madilog.hex"
+# Порт платы наружу: мост подключается к rfc2217://localhost:4000
+rfc2217ServerPort = 4000

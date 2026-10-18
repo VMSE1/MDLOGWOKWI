@@ -1,0 +1,414 @@
+<title>MADILOG: макет стенда и модуля</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: инженерный лист. Шапка, три вкладки (стенд, плата, роли), справа или снизу панель с пояснением выбранного элемента. */
+:root{
+  --bg:#edf2f3; --surface:#fafcfc; --surface2:#e1eaec; --ink:#0d2330; --mute:#4f6877; --line:#c3d3d8;
+  --pcb:#0f7b5f; --pcb-soft:#d3ece3; --amber:#a86400; --amber-soft:#f6e6c8; --water:#1b6fa8; --bad:#b3372f;
+  --f-disp:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1a22; --surface:#112b36; --surface2:#16384a; --ink:#e4f0f3; --mute:#9bb8c2; --line:#26475a;
+  --pcb:#3fd1a0; --pcb-soft:#12483c; --amber:#f0b04a; --amber-soft:#4a3a16; --water:#5db4e8; --bad:#ff7a70; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1a22; --surface:#112b36; --surface2:#16384a; --ink:#e4f0f3; --mute:#9bb8c2; --line:#26475a;
+  --pcb:#3fd1a0; --pcb-soft:#12483c; --amber:#f0b04a; --amber-soft:#4a3a16; --water:#5db4e8; --bad:#ff7a70; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:18px}
+h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;line-height:1.15}
+h1{font-size:30px;letter-spacing:.01em}
+h2{font-size:21px}
+h3{font-size:16px}
+.sub{color:var(--mute);margin:6px 0 0;max-width:68ch}
+.label{font:500 11px var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--mute)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tab{font:600 15px var(--f-disp);letter-spacing:.02em;padding:9px 16px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;background:none;color:var(--mute);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);border-color:var(--line);position:relative;top:1px}
+.tab:focus-visible,.hit:focus-visible,.chip:focus-visible{outline:2px solid var(--pcb);outline-offset:2px}
+section[hidden]{display:none}
+.grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:18px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.scroll{overflow-x:auto}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--f-body);fill:var(--ink)}
+svg .m{font-family:var(--f-mono)}
+.hit{cursor:pointer}
+.hit:hover .shape,.hit.on .shape{stroke:var(--amber);stroke-width:2.5}
+.shape{stroke:var(--ink);stroke-width:1.3}
+.pcb{fill:var(--pcb-soft);stroke:var(--pcb)}
+.wall{fill:var(--surface2);stroke:var(--line)}
+.paper{fill:var(--surface);stroke:var(--mute)}
+.wire{stroke:var(--ink);stroke-width:1.5;fill:none}
+.wire.tx{stroke:var(--amber)} .wire.rx{stroke:var(--water)} .wire.pw{stroke:var(--bad);stroke-dasharray:5 3}
+.num circle{fill:var(--amber);stroke:none} .num text{fill:#fff;font:600 12px var(--f-mono);text-anchor:middle}
+:root[data-theme="dark"] .num text{fill:#10222b}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .num text{fill:#10222b}}
+figcaption{color:var(--mute);font-size:13px;margin-top:8px}
+.detail h3{margin-bottom:4px}
+.detail p{margin:8px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:10px 0 0}
+.kv dt{color:var(--mute)} .kv dd{margin:0}
+.pill{display:inline-block;font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
+.pill.ok{background:var(--pcb-soft);color:var(--pcb);border-color:var(--pcb)}
+.pill.wip{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.pill.opt{color:var(--mute)}
+.legend{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px}
+.chip{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 9px;cursor:pointer}
+.chip.on{border-color:var(--amber);background:var(--amber-soft)}
+.chip b{font:600 12px var(--f-mono);color:var(--amber)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+td.m,.mono{font-family:var(--f-mono);font-size:12.5px}
+.frame{display:flex;gap:2px;margin-top:10px}
+.frame div{flex:var(--w) 1 0;min-width:0;text-align:center;padding:8px 2px;border-radius:4px;background:var(--pcb-soft);border:1px solid var(--pcb);font:500 11px var(--f-mono);color:var(--ink);overflow:hidden}
+.frame div small{display:block;color:var(--mute);font-size:10px}
+.frame .sig{background:var(--amber-soft);border-color:var(--amber)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px;counter-reset:s}
+.flow div{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;background:var(--surface)}
+.flow div::before{counter-increment:s;content:counter(s);display:block;font:600 12px var(--f-mono);color:var(--amber);margin-bottom:2px}
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.people .card h3{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.people ul{margin:8px 0 0;padding-left:18px;font-size:14px} .people li{margin:3px 0}
+.note{border-left:3px solid var(--amber);padding:6px 12px;background:var(--amber-soft);border-radius:0 6px 6px 0;font-size:14px}
+a{color:var(--water)}
+@media (prefers-reduced-motion:no-preference){.hit .shape{transition:stroke .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="label">Команда MADILOG · финал 28.10.2026</div>
+    <h1>Макет стенда и модуля на STM32</h1>
+    <p class="sub">Так стенд выглядит на площадке и из чего собран модуль. Нажимайте на элементы: справа появятся владелец, статус и что нужно сделать. Размеры условные, пины платы примерные.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Разделы макета">
+    <button class="tab" role="tab" id="t-stand" aria-controls="p-stand" aria-selected="true">Стенд</button>
+    <button class="tab" role="tab" id="t-board" aria-controls="p-board" aria-selected="false">Модуль STM32</button>
+    <button class="tab" role="tab" id="t-roles" aria-controls="p-roles" aria-selected="false">Роли и дни</button>
+  </div>
+
+  <!-- ============ СТЕНД ============ -->
+  <section id="p-stand" role="tabpanel" aria-labelledby="t-stand">
+    <div class="grid">
+      <div class="card">
+        <figure style="margin:0">
+          <svg viewBox="0 0 800 330" role="img" aria-label="Вид стенда спереди: три постера на стене, на столе два ноутбука, плата STM32, напечатанный корпус и листовка с QR">
+            <rect class="wall" x="10" y="10" width="780" height="262" rx="4"/>
+            <!-- постеры -->
+            <g class="hit" data-k="s1" data-grp="stand" tabindex="0" role="button" aria-label="Постер: как это работает">
+              <rect class="shape paper" x="30" y="28" width="236" height="150" rx="2"/>
+              <text x="42" y="50" font-size="14" font-weight="600">Как это работает</text>
+              <rect class="shape" x="44" y="66" width="62" height="30" rx="3" fill="none"/><text x="75" y="85" font-size="10" text-anchor="middle">Аппарат</text>
+              <rect class="shape" x="120" y="66" width="62" height="30" rx="3" fill="none"/><text x="151" y="85" font-size="10" text-anchor="middle">Станция</text>
+              <rect class="shape" x="196" y="66" width="56" height="30" rx="3" fill="none"/><text x="224" y="85" font-size="10" text-anchor="middle">Сервер</text>
+              <path class="wire" d="M106 81h14M182 81h14"/>
+              <rect class="shape" x="120" y="116" width="62" height="28" rx="3" fill="none"/><text x="151" y="134" font-size="10" text-anchor="middle">Реестр</text>
+              <path class="wire" d="M224 96v34h-42"/>
+              <text x="42" y="168" font-size="10" fill="var(--mute)" style="fill:var(--mute)">скан, запрос, ответ, проверка</text>
+            </g>
+            <g class="hit" data-k="s2" data-grp="stand" tabindex="0" role="button" aria-label="Постер: цифры и график канала">
+              <rect class="shape paper" x="284" y="28" width="236" height="150" rx="2"/>
+              <text x="296" y="50" font-size="14" font-weight="600">Цифры и график</text>
+              <path d="M298 150 q30 -78 70 -62 t120 58" stroke="var(--water)" stroke-width="2" fill="none"/>
+              <path d="M298 150h200M298 150V64" stroke="var(--mute)" stroke-width="1" fill="none"/>
+              <rect x="400" y="62" width="106" height="20" rx="3" style="fill:var(--amber-soft);stroke:var(--amber)"/><text x="453" y="76" font-size="10" text-anchor="middle">расчёт, допущения</text>
+              <text x="296" y="168" font-size="10" style="fill:var(--mute)">измерено / рассчитано / модель</text>
+            </g>
+            <g class="hit" data-k="s3" data-grp="stand" tabindex="0" role="button" aria-label="Постер: версии, риски, интервью">
+              <rect class="shape paper" x="538" y="28" width="232" height="150" rx="2"/>
+              <text x="550" y="50" font-size="14" font-weight="600">Версии, риски, интервью</text>
+              <path d="M552 74h60M552 94h96M552 114h72M552 134h104" stroke="var(--mute)" stroke-width="3" stroke-linecap="round"/>
+              <text x="660" y="80" font-size="22" style="fill:var(--amber)" font-weight="700">“</text>
+              <text x="550" y="168" font-size="10" style="fill:var(--mute)">v1, v2, v3 с датами · 3 интервью</text>
+            </g>
+            <!-- стол -->
+            <rect x="10" y="258" width="780" height="22" rx="3" style="fill:var(--surface2);stroke:var(--mute)"/>
+            <path d="M40 280v36M760 280v36" stroke="var(--mute)" stroke-width="4"/>
+            <!-- ноутбук 1 -->
+            <g class="hit" data-k="s4" data-grp="stand" tabindex="0" role="button" aria-label="Ноутбук с интерфейсом оператора">
+              <rect class="shape" x="40" y="190" width="200" height="56" rx="4" style="fill:#0b1722"/>
+              <circle cx="90" cy="222" r="5" fill="#3ddc84"/><circle cx="150" cy="208" r="5" fill="#ff5d5d"/><circle cx="190" cy="228" r="5" fill="#ffc247"/><circle cx="120" cy="232" r="4" fill="#8aa3b8"/>
+              <path d="M52 200h50M52 206h30" stroke="#4d6b82" stroke-width="2"/>
+              <path class="shape" d="M28 246h224l-10 12H38z" style="fill:var(--surface2)"/>
+            </g>
+            <!-- ноутбук 2 -->
+            <g class="hit" data-k="s5" data-grp="stand" tabindex="0" role="button" aria-label="Запасной ноутбук с видео">
+              <rect class="shape" x="280" y="204" width="116" height="42" rx="4" style="fill:#0b1722"/>
+              <path d="M326 215l22 10-22 10z" fill="#e6f0f8"/>
+              <path class="shape" d="M270 246h136l-8 12H278z" style="fill:var(--surface2)"/>
+            </g>
+            <!-- плата -->
+            <g class="hit" data-k="s6" data-grp="stand" tabindex="0" role="button" aria-label="Плата NUCLEO с USB-кабелем">
+              <rect class="shape pcb" x="430" y="218" width="104" height="38" rx="3"/>
+              <rect x="466" y="226" width="22" height="22" rx="2" style="fill:var(--ink)"/>
+              <circle cx="444" cy="237" r="3" style="fill:var(--amber)"/>
+              <path class="wire" d="M430 237h-20q-10 0 -10 10v8" />
+              <text x="482" y="213" font-size="10" text-anchor="middle" class="m">NUCLEO-G474RE</text>
+            </g>
+            <!-- корпус -->
+            <g class="hit" data-k="s7" data-grp="stand" tabindex="0" role="button" aria-label="Напечатанный корпус модуля">
+              <rect class="shape" x="560" y="206" width="70" height="50" rx="12" style="fill:var(--surface);stroke-dasharray:0"/>
+              <rect x="575" y="196" width="40" height="12" rx="3" style="fill:var(--mute)"/>
+              <circle cx="595" cy="232" r="9" fill="none" stroke="var(--mute)" stroke-width="2"/>
+              <path d="M572 245h46" stroke="var(--line)" stroke-width="2"/>
+            </g>
+            <!-- листовка -->
+            <g class="hit" data-k="s8" data-grp="stand" tabindex="0" role="button" aria-label="Листовка с QR-кодом">
+              <rect class="shape paper" x="670" y="196" width="76" height="60" rx="2"/>
+              <rect x="684" y="204" width="24" height="24" fill="var(--ink)"/><rect x="688" y="208" width="16" height="16" style="fill:var(--surface)"/><rect x="692" y="212" width="8" height="8" fill="var(--ink)"/>
+              <path d="M714 208h22M714 216h18M684 238h52M684 246h38" stroke="var(--mute)" stroke-width="2.5" stroke-linecap="round"/>
+            </g>
+            <!-- номера -->
+            <g class="num"><circle cx="26" cy="34" r="11"/><text x="26" y="38">1</text></g>
+            <g class="num"><circle cx="280" cy="34" r="11"/><text x="280" y="38">2</text></g>
+            <g class="num"><circle cx="534" cy="34" r="11"/><text x="534" y="38">3</text></g>
+            <g class="num"><circle cx="46" cy="196" r="11"/><text x="46" y="200">4</text></g>
+            <g class="num"><circle cx="286" cy="210" r="11"/><text x="286" y="214">5</text></g>
+            <g class="num"><circle cx="436" cy="206" r="11"/><text x="436" y="210">6</text></g>
+            <g class="num"><circle cx="566" cy="200" r="11"/><text x="566" y="204">7</text></g>
+            <g class="num"><circle cx="676" cy="200" r="11"/><text x="676" y="204">8</text></g>
+            <text x="400" y="312" text-anchor="middle" font-size="12" style="fill:var(--mute)">Стол и стена стенда. Двое у стенда, третий сидит за ноутбуком 1.</text>
+          </svg>
+          <figcaption>Вид спереди. Слева направо: постеры на стене, на столе ноутбук оператора, запасной ноутбук с видео, плата, корпус модуля, листовка.</figcaption>
+        </figure>
+        <ul class="legend" id="legend-stand"></ul>
+      </div>
+      <aside class="card detail" id="d-stand" aria-live="polite"></aside>
+    </div>
+    <p class="note" style="margin-top:14px">Правило стенда: всё из списка запускается за 10 секунд и работает по кругу. Если плата не соберётся, пункт 6 заменяется рендером на постере, остальное остаётся.</p>
+  </section>
+
+  <!-- ============ ПЛАТА ============ -->
+  <section id="p-board" role="tabpanel" aria-labelledby="t-board" hidden>
+    <div class="grid">
+      <div class="card">
+        <figure style="margin:0">
+          <div class="scroll">
+          <svg viewBox="0 0 820 520" style="min-width:640px" role="img" aria-label="Блок-схема модуля: микроконтроллер STM32G474RE, передающий и приёмный тракты к пьезоэлементу, модем SIM7600E, компас, USB для стенда и питание от солнечной панели">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+            </defs>
+            <!-- МК -->
+            <g class="hit" data-k="b_mcu" data-grp="board" tabindex="0" role="button" aria-label="Микроконтроллер STM32G474RE">
+              <rect class="shape pcb" x="320" y="80" width="190" height="300" rx="6"/>
+              <text x="415" y="106" text-anchor="middle" font-size="15" font-weight="600">STM32G474RE</text>
+              <text x="415" y="124" text-anchor="middle" font-size="11" class="m" style="fill:var(--mute)">NUCLEO-G474RE</text>
+              <g font-size="11" class="m">
+                <text x="334" y="170">TIM1 · PWM</text><text x="334" y="320">ADC1 · приём</text>
+                <text x="334" y="246">GPIO · T/R</text>
+                <text x="496" y="150" text-anchor="end">USART1</text><text x="496" y="270" text-anchor="end">I2C1</text><text x="496" y="350" text-anchor="end">USB VCP</text>
+              </g>
+              <text x="415" y="212" text-anchor="middle" font-size="12" font-weight="500">кадр 17 байт</text>
+              <text x="415" y="228" text-anchor="middle" font-size="11" style="fill:var(--mute)">CRC16 + подпись + счётчик</text>
+            </g>
+            <!-- пьезо -->
+            <g class="hit" data-k="b_piezo" data-grp="board" tabindex="0" role="button" aria-label="Пьезоэлемент">
+              <ellipse class="shape" cx="64" cy="240" rx="44" ry="44" style="fill:var(--surface2)"/>
+              <ellipse cx="64" cy="240" rx="26" ry="26" fill="none" stroke="var(--mute)"/>
+              <text x="64" y="244" text-anchor="middle" font-size="12" font-weight="600">Пьезо</text>
+              <text x="64" y="300" text-anchor="middle" font-size="11" style="fill:var(--mute)">TX и RX</text>
+            </g>
+            <g class="hit" data-k="b_trsw" data-grp="board" tabindex="0" role="button" aria-label="Переключатель приём-передача">
+              <rect class="shape" x="130" y="212" width="66" height="56" rx="4" style="fill:var(--surface)"/>
+              <text x="163" y="236" text-anchor="middle" font-size="12" font-weight="600">T/R</text>
+              <text x="163" y="252" text-anchor="middle" font-size="10" style="fill:var(--mute)">ключ</text>
+            </g>
+            <g class="hit" data-k="b_drv" data-grp="board" tabindex="0" role="button" aria-label="Драйвер передатчика">
+              <rect class="shape" x="130" y="118" width="150" height="56" rx="4" style="fill:var(--surface)"/>
+              <text x="205" y="142" text-anchor="middle" font-size="12" font-weight="600">Драйвер + трансформатор</text>
+              <text x="205" y="160" text-anchor="middle" font-size="10" style="fill:var(--mute)">усиление сигнала TX</text>
+            </g>
+            <g class="hit" data-k="b_amp" data-grp="board" tabindex="0" role="button" aria-label="Предусилитель и фильтр">
+              <rect class="shape" x="130" y="296" width="150" height="56" rx="4" style="fill:var(--surface)"/>
+              <text x="205" y="320" text-anchor="middle" font-size="12" font-weight="600">Предусилитель + фильтр</text>
+              <text x="205" y="338" text-anchor="middle" font-size="10" style="fill:var(--mute)">выделяет 25–40 кГц</text>
+            </g>
+            <!-- провода акустики -->
+            <path class="wire tx" d="M320 150H280" marker-end="url(#ar)"/>
+            <path class="wire tx" d="M180 174v38"/>
+            <path class="wire" d="M130 240h-22"/>
+            <path class="wire rx" d="M163 268v28"/>
+            <path class="wire rx" d="M280 324h40" />
+            <path class="wire" d="M320 246h-124" />
+            <text x="300" y="140" font-size="10" class="m" style="fill:var(--amber)">TX</text>
+            <text x="286" y="316" font-size="10" class="m" style="fill:var(--water)">RX</text>
+            <!-- модем -->
+            <g class="hit" data-k="b_modem" data-grp="board" tabindex="0" role="button" aria-label="Модем SIM7600E">
+              <rect class="shape" x="620" y="100" width="180" height="100" rx="6" style="fill:var(--surface)"/>
+              <text x="710" y="130" text-anchor="middle" font-size="14" font-weight="600">SIM7600E</text>
+              <text x="710" y="150" text-anchor="middle" font-size="11" style="fill:var(--mute)">LTE + GNSS</text>
+              <text x="710" y="176" text-anchor="middle" font-size="11" class="m" style="fill:var(--mute)">AT-команды по UART</text>
+            </g>
+            <path class="wire" d="M510 150h110" marker-end="url(#ar)"/>
+            <text x="565" y="143" font-size="10" text-anchor="middle" class="m">UART</text>
+            <path class="wire" d="M710 100V60" marker-end="url(#ar)"/>
+            <text x="716" y="48" font-size="12" font-weight="600">на сервер</text>
+            <text x="716" y="64" font-size="10" class="m" style="fill:var(--mute)">HTTP POST /api/v1/detections</text>
+            <!-- компас -->
+            <g class="hit" data-k="b_imu" data-grp="board" tabindex="0" role="button" aria-label="Компас">
+              <rect class="shape" x="620" y="236" width="180" height="62" rx="6" style="fill:var(--surface)"/>
+              <text x="710" y="262" text-anchor="middle" font-size="13" font-weight="600">Компас / IMU</text>
+              <text x="710" y="280" text-anchor="middle" font-size="11" style="fill:var(--mute)">курс станции</text>
+            </g>
+            <path class="wire" d="M510 270h110" marker-end="url(#ar)"/>
+            <text x="565" y="263" font-size="10" text-anchor="middle" class="m">I2C</text>
+            <!-- USB -->
+            <g class="hit" data-k="b_usb" data-grp="board" tabindex="0" role="button" aria-label="USB к ноутбуку, режим стенда">
+              <rect class="shape" x="620" y="326" width="180" height="62" rx="6" style="fill:var(--amber-soft);stroke:var(--amber)"/>
+              <text x="710" y="352" text-anchor="middle" font-size="13" font-weight="600">USB к ноутбуку</text>
+              <text x="710" y="370" text-anchor="middle" font-size="11" style="fill:var(--mute)">режим стенда: кадр в мост</text>
+            </g>
+            <path class="wire" d="M510 350h110" marker-end="url(#ar)"/>
+            <!-- питание -->
+            <g class="hit" data-k="b_pwr" data-grp="board" tabindex="0" role="button" aria-label="Питание">
+              <rect class="shape" x="40" y="430" width="120" height="50" rx="4" style="fill:var(--surface)"/><text x="100" y="452" text-anchor="middle" font-size="12" font-weight="600">Солнечная</text><text x="100" y="468" text-anchor="middle" font-size="12">панель</text>
+              <rect class="shape" x="196" y="430" width="100" height="50" rx="4" style="fill:var(--surface)"/><text x="246" y="460" text-anchor="middle" font-size="12" font-weight="600">MPPT</text>
+              <rect class="shape" x="332" y="430" width="130" height="50" rx="4" style="fill:var(--surface)"/><text x="397" y="452" text-anchor="middle" font-size="12" font-weight="600">Li-ion 3S</text><text x="397" y="468" text-anchor="middle" font-size="11" style="fill:var(--mute)">аккумулятор</text>
+              <rect class="shape" x="498" y="430" width="120" height="50" rx="4" style="fill:var(--surface)"/><text x="558" y="452" text-anchor="middle" font-size="12" font-weight="600">Понижающий</text><text x="558" y="468" text-anchor="middle" font-size="11" style="fill:var(--mute)">5 В / 3,3 В</text>
+              <rect class="shape" x="654" y="430" width="130" height="50" rx="4" style="fill:var(--surface)"/><text x="719" y="452" text-anchor="middle" font-size="12" font-weight="600">Понижающий</text><text x="719" y="468" text-anchor="middle" font-size="11" style="fill:var(--mute)">для модема</text>
+              <path class="wire pw" d="M160 455h36M296 455h36M462 455h36M618 455h36"/>
+            </g>
+            <text x="40" y="416" font-size="11" class="m" style="fill:var(--bad)">питание (пунктир)</text>
+            <text x="60" y="48" font-size="11" class="m" style="fill:var(--amber)">оранжевый: передача</text>
+            <text x="60" y="64" font-size="11" class="m" style="fill:var(--water)">синий: приём</text>
+          </svg>
+          </div>
+          <figcaption>Блок-схема модуля. Для стенда нужны плата, USB и (если получится) пьезоэлемент. Модем и питание показываем на схеме и в корпусе.</figcaption>
+        </figure>
+      </div>
+      <aside class="card detail" id="d-board" aria-live="polite"></aside>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h2>Путь одного ответа</h2>
+      <div class="flow">
+        <div><b>Скан 150 кГц</b><br>станция находит объект по эху</div>
+        <div><b>Запрос 25 кГц</b><br>«кто ты?»</div>
+        <div><b>Ответ 30–40 кГц</b><br>аппарат шлёт кадр</div>
+        <div><b>Станция</b><br>меряет дальность, принимает кадр</div>
+        <div><b>Канал связи</b><br>LTE, радио, цепочка буёв (на стенде USB)</div>
+        <div><b>Сервер</b><br>CRC, подпись, реестр, статус</div>
+      </div>
+      <h3 style="margin-top:18px">Кадр ответа, 17 байт</h3>
+      <div class="frame" role="img" aria-label="Поля кадра: преамбула 1 байт, версия 1, ID 4, счётчик 2, глубина 2, флаги 1, подпись 4, CRC 2">
+        <div style="--w:1">0xA5<small>преамбула</small></div>
+        <div style="--w:1">ver<small>версия</small></div>
+        <div style="--w:4">ID<small>4 байта</small></div>
+        <div style="--w:2">счётчик<small>2</small></div>
+        <div style="--w:2">глубина<small>2, дм</small></div>
+        <div style="--w:1">флаги</div>
+        <div class="sig" style="--w:4">подпись<small>4 байта</small></div>
+        <div style="--w:2">CRC16<small>2</small></div>
+      </div>
+      <p class="sub" style="font-size:13px">Формат взят из <span class="mono">sim/packet.py</span>. Подпись считается по ключу аппарата, счётчик не даёт повторить старый пакет.</p>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h2>Выводы платы (пример)</h2>
+      <p class="sub" style="font-size:13px;margin-bottom:8px">Назначение выбрано по типовой распиновке NUCLEO-G474RE. Окончательно Никита задаёт в CubeMX по документации платы, особенно для USART1 на модем.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Функция</th><th>Периферия</th><th>Пин</th><th>Куда</th></tr></thead>
+        <tbody>
+          <tr><td>Импульс передачи</td><td class="m">TIM1_CH1</td><td class="m">PA8 (D7)</td><td>драйвер излучателя</td></tr>
+          <tr><td>Приём сигнала</td><td class="m">ADC1_IN1</td><td class="m">PA0 (A0)</td><td>выход предусилителя</td></tr>
+          <tr><td>Режим приём/передача</td><td class="m">GPIO</td><td class="m">PB0 (A3)</td><td>ключ T/R</td></tr>
+          <tr><td>Модем</td><td class="m">USART1</td><td class="m">PC4 / PC5</td><td>SIM7600E (UART)</td></tr>
+          <tr><td>Компас</td><td class="m">I2C1</td><td class="m">PB8 / PB9</td><td>датчик курса</td></tr>
+          <tr><td>Связь с ноутбуком</td><td class="m">USART2 (ST-LINK VCP)</td><td class="m">PA2 / PA3</td><td>USB-кабель платы</td></tr>
+        </tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ РОЛИ ============ -->
+  <section id="p-roles" role="tabpanel" aria-labelledby="t-roles" hidden>
+    <div class="people">
+      <div class="card"><h3>Александр <span class="label">капитан</span></h3>
+        <ul><li>Репозиторий, запуск <span class="mono">run_demo.py</span> на трёх ноутбуках</li><li>Сборка стенда, питч, ответы жюри по цифрам</li><li>3D-печать корпуса, закупка платы, если решаем делать</li><li>Контакт с организатором и «Маринетом»</li></ul></div>
+      <div class="card"><h3>Никита <span class="label">протокол и канал</span></h3>
+        <ul><li><span class="mono">PROTOCOL.md</span> и <span class="mono">CHANNEL.md</span></li><li>Реальные параметры излучателя вместо допущений</li><li>Прошивка STM32 или эмулятор: кадр с подписью</li><li>Графики 150 и 40 кГц с пометкой «расчёт»</li></ul></div>
+      <div class="card"><h3>Алексей <span class="label">сервер и реестр</span></h3>
+        <ul><li><span class="mono">API.md</span>, реестр, ядро координат</li><li>Сценарии «рой» и «другая юрисдикция»</li><li>Интерфейс: фильтры, экспорт журнала, режим демо</li><li>Мост <span class="mono">serial_bridge.py</span>: плата → API</li></ul></div>
+      <div class="card"><h3>Валерия <span class="label">продукт и визуал</span></h3>
+        <ul><li>Дизайн модуля: 3D-модель корпуса, рендер, постер</li><li>Таблица правил разных стран, на ней сценарий юрисдикции</li><li>Проверка интерфейса на трёх людях, «до и после»</li><li>Режиссура демо, видео 3 минуты, 3–5 интервью</li></ul></div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h2>Ключевые даты</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Дата</th><th>Что должно быть сделано</th></tr></thead>
+        <tbody>
+          <tr><td class="m">Сб 17.10</td><td>Созвон 20:00, пять решений, раздача ролей</td></tr>
+          <tr><td class="m">Вт 20.10</td><td>Решение по железу: эмулятор, плата или только макет-картинка</td></tr>
+          <tr><td class="m">Ср 21.10</td><td>Заморозка функций, запись видео демо</td></tr>
+          <tr><td class="m">Пт 23.10</td><td>Репетиция 1 при чужих людях</td></tr>
+          <tr><td class="m">Пн 26.10</td><td>Репетиция 2, чек-лист упаковки</td></tr>
+          <tr><td class="m">Вт 27.10</td><td>Код не меняем</td></tr>
+          <tr><td class="m">Ср 28.10</td><td>Финал, минимум трое на площадке</td></tr>
+        </tbody></table></div>
+      <p class="sub" style="font-size:13px">Полный график по дням и вопросы жюри лежат в документе «MADILOG: план до финала 28.10».</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const D = {
+  stand: {
+    s1:{n:1,t:"Постер «Как это работает»",who:"Валерия",st:["wip","делаем"],body:"Схема архитектуры: аппарат, станция, сервер, реестр. Четыре шага: скан, запрос, ответ, проверка. Подпись под схемой: станцией может быть буй или корабль с модулем.",todo:"Собрать в графическом редакторе из схемы архитектуры, экспорт PDF."},
+    s2:{n:2,t:"Постер «Цифры и график»",who:"Никита, Александр",st:["wip","делаем"],body:"График модели канала и таблица цифр. У каждой цифры метка: измерено, рассчитано или модель. Сейчас все дальности расчётные.",todo:"Пересобрать график с реальными параметрами излучателя, разъяснить 400 м, 900 м и 4,4 км."},
+    s3:{n:3,t:"Постер «Версии, риски, интервью»",who:"Валерия",st:["wip","делаем"],body:"Как менялось решение (версии 1, 2, 3 с датами), главные риски с запасными планами, по одной цитате из каждого интервью.",todo:"Минимум 3 интервью с разными ролями."},
+    s4:{n:4,t:"Ноутбук 1: интерфейс оператора",who:"Алексей, Александр",st:["ok","базовая версия готова"],body:"Карта акватории, таблица объектов, реестр, журнал. Один запуск: python run_demo.py. Показывает статусы свой, чужой, подмена, не подтверждено.",todo:"Фильтры, экспорт журнала, кнопки сценариев «рой» и «другая юрисдикция»."},
+    s5:{n:5,t:"Ноутбук 2: видео и запасной запуск",who:"Александр",st:["wip","делаем"],body:"Видео демо на 3 минуты крутится по кругу. Если упадёт первый ноутбук, на втором тот же проект и то же видео.",todo:"Записать 21.10, положить файл на каждый ноутбук."},
+    s6:{n:6,t:"Плата NUCLEO-G474RE",who:"Никита, Алексей",st:["opt","решаем 20.10"],body:"Настоящая плата формирует кадр с подписью и отправляет по USB. Мост передаёт кадр в API, на карте появляется объект. Это самый сильный эффект при малых затратах.",todo:"Если платы нет, показываем эмулятор на экране и рендер на постере."},
+    s7:{n:7,t:"Корпус модуля, 3D-печать",who:"Валерия, Александр",st:["wip","делаем"],body:"Напечатанный корпус с табличкой «габаритно-массовый макет». Показывает размеры, крепление на корабле и расположение плат. Внутри плата и батарея-имитатор, если соберём.",todo:"Модель в Tinkercad или Fusion, печать 22.10, запасной вариант: рендер."},
+    s8:{n:8,t:"Листовка с QR",who:"Валерия",st:["wip","делаем"],body:"На листовке схема в одну строку, контакты команды и QR на видео демо. Судья берёт её с собой.",todo:"Печать 24.10."}
+  },
+  board: {
+    b_mcu:{t:"Микроконтроллер STM32G474RE",who:"Никита",st:["opt","решаем 20.10"],body:"Формирует импульс передачи, оцифровывает приём, собирает кадр на 17 байт, считает CRC16 и подпись, ведёт счётчик, говорит с модемом по UART. На плате NUCLEO-G474RE есть отладчик ST-LINK и виртуальный COM-порт.",todo:"Подпись HMAC-SHA256 обрезается до 4 байт, как в симуляции. Реализация программная."},
+    b_piezo:{t:"Пьезоэлемент",who:"Никита",st:["opt","вопрос"],body:"Один элемент работает и на передачу, и на приём. Из-за этого модуль не знает угол на объект и даёт только дальность, координаты считает сервер по трём станциям.",todo:"Открытый вопрос: частоты 150, 25 и 30–40 кГц сильно различаются, один резонансный элемент вряд ли их все покроет. Нужно выбрать излучатель или несколько."},
+    b_trsw:{t:"Ключ приём/передача",who:"Никита",st:["opt","идея"],body:"Отключает вход приёмника на время мощного импульса передачи, чтобы не сжечь вход и не оглушить приёмник. Управляется ножкой GPIO.",todo:"Подобрать схему под выбранный излучатель."},
+    b_drv:{t:"Драйвер и трансформатор",who:"Никита",st:["opt","идея"],body:"Усиливает сигнал с таймера до напряжения, достаточного для излучателя. Амплитуду определяет паспорт излучателя.",todo:"Параметры брать из документации излучателя, не из допущений в модели."},
+    b_amp:{t:"Предусилитель и фильтр",who:"Никита",st:["opt","идея"],body:"Усиливает слабый сигнал и оставляет нужную полосу, затем сигнал идёт на АЦП. В микроконтроллере есть встроенные операционные усилители, возможно часть тракта соберётся без внешних микросхем.",todo:"Проверить по документации кристалла и платы."},
+    b_modem:{t:"Модем SIM7600E",who:"Никита, Алексей",st:["opt","не на стенде"],body:"LTE-связь с сервером и приёмник GNSS для положения станции. Работает по AT-командам через UART. Отправка: HTTP-запрос с измерениями на /api/v1/detections.",todo:"На стенде не нужен, показываем на схеме и в корпусе."},
+    b_imu:{t:"Компас / IMU",who:"Никита",st:["opt","идея"],body:"Даёт курс станции. Он нужен серверу, когда считает положение объекта по углу относительно корабля. Для буя курс можно задать в настройках.",todo:"Опционально."},
+    b_usb:{t:"USB к ноутбуку (режим стенда)",who:"Алексей",st:["opt","решаем 20.10"],body:"Плата шлёт кадры через виртуальный COM-порт. Скрипт serial_bridge.py читает их, превращает в JSON и отправляет в API. Так настоящая прошивка видна на карте без модема и LTE.",todo:"Написать мост, протестировать связку плата, мост, API, статус."},
+    b_pwr:{t:"Питание",who:"Никита",st:["opt","на схеме"],body:"Солнечная панель, контроллер заряда MPPT, аккумулятор Li-ion 3S, два понижающих преобразователя: 5 и 3,3 В для платы, отдельный для модема, потому что при передаче он берёт большой ток.",todo:"На стенде питание от USB, остальное на схеме."}
+  }
+};
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function show(grp,key){
+  const d=D[grp][key]; if(!d) return;
+  document.querySelectorAll('[data-grp="'+grp+'"]').forEach(el=>el.classList.toggle('on',el.dataset.k===key));
+  const box=document.getElementById('d-'+grp);
+  box.innerHTML='<div class="label">'+(d.n?('Элемент '+d.n):'Блок схемы')+'</div><h3>'+esc(d.t)+'</h3>'+
+    '<p><span class="pill '+d.st[0]+'">'+esc(d.st[1])+'</span></p><p>'+esc(d.body)+'</p>'+
+    '<dl class="kv"><dt>Отвечает</dt><dd>'+esc(d.who)+'</dd><dt>Что сделать</dt><dd>'+esc(d.todo)+'</dd></dl>';
+}
+// легенда стенда
+const lg=document.getElementById('legend-stand');
+Object.entries(D.stand).forEach(([k,d])=>{
+  const li=document.createElement('li');
+  li.innerHTML='<button class="chip" data-grp="stand" data-k="'+k+'"><b>'+d.n+'</b><span>'+esc(d.t.replace(/^[^«:]*[«:]\s*/,'').replace(/»$/,'')||d.t)+'</span></button>';
+  lg.appendChild(li);
+});
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-k]'); if(el) show(el.dataset.grp,el.dataset.k);
+});
+document.addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.hit')){e.preventDefault();show(e.target.dataset.grp,e.target.dataset.k)}
+});
+// вкладки
+const tabs=[...document.querySelectorAll('.tab')];
+function openTab(t){
+  tabs.forEach(b=>{const on=b===t;b.setAttribute('aria-selected',on);document.getElementById(b.getAttribute('aria-controls')).hidden=!on});
+}
+tabs.forEach(b=>b.addEventListener('click',()=>openTab(b)));
+show('stand','s6'); show('board','b_mcu');
+</script>
